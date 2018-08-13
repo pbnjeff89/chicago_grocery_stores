@@ -1,0 +1,57 @@
+---
+title: "Chicago Grocery Stores"
+output: html_notebook
+---
+Note: This was originally just something to explore visualizations in R, but I think there are some cool insights!
+
+```{r}
+library(readr)
+
+grocery_stores_2013 <- read_csv("chicago_groceries/grocery-stores-2013.csv");
+```
+
+Grab some maps with ```ggplot```.
+
+```{r}
+library(ggplot2)
+IL_counties <- map_data("county", region="illinois")
+```
+
+Chicago is in Cook County, so I'll look strictly at that region.
+
+```{r}
+cook_county <- IL_counties[IL_counties[,"subregion"] == "cook",]
+```
+
+And Cook County with its groceries (in 2013) looks like this:
+
+```{r}
+ggplot(cook_county, aes(x = long, y = lat, group = subregion)) +
+  geom_polygon(color="black", fill="yellow") +
+  geom_point(data=grocery_stores_2013, aes(x = LONGITUDE, y = LATITUDE), inherit.aes=FALSE, color="red", alpha=0.25) +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  ggtitle("Map of grocery stores in Chicago, 2013") +
+  coord_map()
+```
+
+I might be able to do a bit better by also plotting the boundaries for various zip codes. Please take a look at the ZipCodeExtraction Jupyter notebook for details on how I did that.
+
+```{r}
+chicago_zip_codes <- read_csv('chicago_zip_codes.csv')
+```
+
+I can superimpose the counties with the grocery store locations in the same way:
+
+```{r}
+ggplot(chicago_zip_codes, aes(x = longitude, y = latitude, group = zip)) +
+  geom_polygon(color="black", fill="yellow") +
+  geom_point(data=grocery_stores_2013, aes(x = LONGITUDE, y = LATITUDE), inherit.aes=FALSE, color="blue", alpha=0.25) +
+  xlab("Longitude") +
+  ylab("Latitude") +
+  ggtitle("Map of grocery stores in Chicago, 2013") +
+  coord_map()
+```
+To point out a few points of interest:
+
+The upper left portion of the map that looks like a circle (60666) is the O'Hare International Airport. It's actually quite reasonable that there are no grocery stores there. On the middle left part of the map, there is a rectangle (60638) which is a bit sparse. The lower right corner of that area is the Chicago Midway Airport and is otherwise filled with residential areas. Down and to the right of Midway there is 60652 which is also extremely sparse. I'm not familiar with that particular neighborhood, but there is a variable which I suspect might be correlated to it. The geography in the lower right region consists of a lot of lakes, rivers, parks, and forests, so it is not entirely surprising that grocery stores are sparse there as well. I think that one of the more interesting things here is that the grocery stores seem to cluster along lines. You can see a lot of stores cluster along the coast. There are a lot which cluster around the middle-right portion of the map, which turns out to be around the Loop area. Fanning out from that part of Chicago seems to be clusters of stores. Something that would be interesting to see is how closely the CTA lines or the highways line up. This should be easily done by superimposing the grocery store locations onto a Google Map (so, this is a work in progress).
